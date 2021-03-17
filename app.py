@@ -9,7 +9,7 @@ from models import db, connect_db, User, Message
 
 # from env import USER_POSTGRES, PASSWORD_POSTGRES
 
-from env import 
+from env import USER_POSTGRES, PASSWORD_POSTGRES
 
 CURR_USER_KEY = "curr_user"
 
@@ -17,11 +17,11 @@ app = Flask(__name__)
 
 # Get DB_URI from environ variable (useful for production/testing) or,
 # if not set there, use development local db.
-app.config['SQLALCHEMY_DATABASE_URI'] = (
-    os.environ.get('DATABASE_URL', 'postgres:///warbler'))
+# app.config['SQLALCHEMY_DATABASE_URI'] = (
+#     os.environ.get('DATABASE_URL', 'postgres:///warbler'))
 
 #Windows database configuration
-# app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://{USER_POSTGRES}:{PASSWORD_POSTGRES}@127.0.0.1/users"
+app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://{USER_POSTGRES}:{PASSWORD_POSTGRES}@127.0.0.1/warbler"
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ECHO'] = False
@@ -119,6 +119,12 @@ def login():
 @app.route('/logout')
 def logout():
     """Handle logout of user."""
+
+    session.pop(CURR_USER_KEY, None)
+    flash('You have been logged out!')
+
+    return redirect("/login")
+
 
     # IMPLEMENT THIS
 
@@ -285,7 +291,6 @@ def messages_destroy(message_id):
 @app.route('/')
 def homepage():
     """Show homepage:
-
     - anon users: no messages
     - logged in: 100 most recent messages of followed_users
     """
