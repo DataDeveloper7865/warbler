@@ -235,7 +235,7 @@ def profile():
         flash("Authentication credentials invalid")
     return render_template('users/edit.html', form=form, user=g.user)
 
-        # IMPLEMENT THIS
+    # IMPLEMENT THIS
 
 
 @ app.route('/users/delete', methods=["POST"])
@@ -302,9 +302,43 @@ def messages_destroy(message_id):
 
     return redirect(f"/users/{g.user.id}")
 
+########################### Likes messages ###################################
 
-##############################################################################
-# Homepage and error pages
+
+@app.route('/users/<int:uid>/likes')
+def list_liked_messages(uid):
+    """list the g.users liked messages"""
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    user = User.query.get_or_404(uid)
+
+    return render_template('/users/liked.html', user=user)
+
+
+@app.route('/messages/<int:mid>/like', methods=["POST"])
+def like_dislike_message(mid):
+    """liking a message"""
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    liked_message = Message.query.get_or_404(mid)
+
+    if liked_message in g.user.liked_messages:
+        g.user.liked_messages.remove(liked_message)
+    else:
+        g.user.liked_messages.append(liked_message)
+
+    db.session.commit()
+
+    return redirect('/')
+
+    ##############################################################################
+    # Homepage and error pages
 
 
 @ app.route('/')
@@ -315,7 +349,8 @@ def homepage():
     """
 
     if g.user:
-        user_following_ids = [following.id for following in g.user.following] + [g.user.id]
+        user_following_ids = [
+            following.id for following in g.user.following] + [g.user.id]
 
         messages = (Message
                     .query.filter(Message.user_id.in_(user_following_ids))
@@ -343,3 +378,9 @@ def add_header(response):
     # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control
     response.cache_control.no_store = True
     return response
+
+
+# if message not liked show this
+# <i class="far fa-thumbs-up"></i>
+# if message liked show this
+# <i class="fas fa-thumbs-up"></i>
