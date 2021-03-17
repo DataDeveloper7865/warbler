@@ -1,10 +1,11 @@
+from flask_sqlalchemy import SQLAlchemy
 import os
 
 from flask import Flask, render_template, request, flash, redirect, session, g
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
-from forms import UserAddForm, LoginForm, MessageForm
+from forms import UserAddForm, LoginForm, MessageForm, UpdateUserForm
 from models import db, connect_db, User, Message
 
 # from env import USER_POSTGRES, PASSWORD_POSTGRES
@@ -18,9 +19,9 @@ app = Flask(__name__)
 # Get DB_URI from environ variable (useful for production/testing) or,
 # if not set there, use development local db.
 app.config['SQLALCHEMY_DATABASE_URI'] = (
-    os.environ.get('DATABASE_URL', 'postgres:///warbler'))
+    os.environ.get('DATABASE_URL', 'postgresql:///warbler'))
 
-#Windows database configuration
+# Windows database configuration
 # app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://{USER_POSTGRES}:{PASSWORD_POSTGRES}@127.0.0.1/warbler"
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -126,9 +127,6 @@ def logout():
     return redirect("/login")
 
 
-    # IMPLEMENT THIS
-
-
 ##############################################################################
 # General user routes:
 
@@ -216,10 +214,33 @@ def stop_following(follow_id):
 def profile():
     """Update profile for current user."""
 
-    # IMPLEMENT THIS
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    form = UpdateUserForm(obj=g.user)
+
+    if form.validate_on_submit():
+        if g.user.authenticate(g.user.username, form.password.data):
+            g.user.username = form.username.data
+            g.user.email = form.email.data
+            g.user.image_url = form.image_url.data
+            g.user.header_image_url = form.header_image_url.data
+            g.user.bio = form.bio.data
+
+            db.session.commit()
+
+            return redirect(f'/users/{g.user.id}')
+
+        flash("Authentication credentials invalid")
+        return redirect('/')
+    else:
+        return render_template('users/edit.html', form=form, user=g.user)
+
+        # IMPLEMENT THIS
 
 
-@app.route('/users/delete', methods=["POST"])
+@ app.route('/users/delete', methods=["POST"])
 def delete_user():
     """Delete user."""
 
@@ -238,7 +259,7 @@ def delete_user():
 ##############################################################################
 # Messages routes:
 
-@app.route('/messages/new', methods=["GET", "POST"])
+@ app.route('/messages/new', methods=["GET", "POST"])
 def messages_add():
     """Add a message:
 
@@ -261,7 +282,7 @@ def messages_add():
     return render_template('messages/new.html', form=form)
 
 
-@app.route('/messages/<int:message_id>', methods=["GET"])
+@ app.route('/messages/<int:message_id>', methods=["GET"])
 def messages_show(message_id):
     """Show a message."""
 
@@ -269,7 +290,7 @@ def messages_show(message_id):
     return render_template('messages/show.html', message=msg)
 
 
-@app.route('/messages/<int:message_id>/delete', methods=["POST"])
+@ app.route('/messages/<int:message_id>/delete', methods=["POST"])
 def messages_destroy(message_id):
     """Delete a message."""
 
@@ -288,7 +309,7 @@ def messages_destroy(message_id):
 # Homepage and error pages
 
 
-@app.route('/')
+@ app.route('/')
 def homepage():
     """Show homepage:
     - anon users: no messages
@@ -315,7 +336,7 @@ def homepage():
 #
 # https://stackoverflow.com/questions/34066804/disabling-caching-in-flask
 
-@app.after_request
+@ app.after_request
 def add_header(response):
     """Add non-caching headers on every request."""
 
