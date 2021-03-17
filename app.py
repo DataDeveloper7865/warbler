@@ -6,7 +6,7 @@ from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 
 from forms import UserAddForm, LoginForm, MessageForm, UpdateUserForm
-from models import db, connect_db, User, Message
+from models import db, connect_db, User, Message, Like
 
 # from env import USER_POSTGRES, PASSWORD_POSTGRES
 
@@ -221,7 +221,7 @@ def profile():
     form = UpdateUserForm(obj=g.user)
 
     if form.validate_on_submit():
-        if g.user.authenticate(g.user.username, form.password.data):
+        if User.authenticate(g.user.username, form.password.data):
             g.user.username = form.username.data
             g.user.email = form.email.data
             g.user.image_url = form.image_url.data
@@ -233,9 +233,7 @@ def profile():
             return redirect(f'/users/{g.user.id}')
 
         flash("Authentication credentials invalid")
-        return redirect('/')
-    else:
-        return render_template('users/edit.html', form=form, user=g.user)
+    return render_template('users/edit.html', form=form, user=g.user)
 
         # IMPLEMENT THIS
 
@@ -317,8 +315,10 @@ def homepage():
     """
 
     if g.user:
+        user_following_ids = [following.id for following in g.user.following] + [g.user.id]
+
         messages = (Message
-                    .query
+                    .query.filter(Message.user_id.in_(user_following_ids))
                     .order_by(Message.timestamp.desc())
                     .limit(100)
                     .all())
