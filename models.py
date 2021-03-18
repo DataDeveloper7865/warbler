@@ -26,6 +26,9 @@ class Follows(db.Model):
         primary_key=True,
     )
 
+    def __repr__(self):
+        return f"<user_being_followed_id: {self.user_being_followed_id}: user_following_id: {self.user_following_id}>"
+
 
 class User(db.Model):
     """User in the system."""
@@ -113,17 +116,20 @@ class User(db.Model):
         Hashes password and adds user to system.
         """
 
-        hashed_pwd = bcrypt.generate_password_hash(password).decode('UTF-8')
+        try:
+            hashed_pwd = bcrypt.generate_password_hash(password).decode('UTF-8')
 
-        user = User(
-            username=username,
-            email=email,
-            password=hashed_pwd,
-            image_url=image_url,
-        )
+            user = User(
+                username=username,
+                email=email,
+                password=hashed_pwd,
+                image_url=image_url,
+            )
 
-        db.session.add(user)
-        return user
+            db.session.add(user)
+            return user
+        except TypeError:
+            print("Invalid Num params")
 
     @classmethod
     def authenticate(cls, username, password):
@@ -175,6 +181,9 @@ class Message(db.Model):
 
     user = db.relationship('User')
 
+    def __repr__(self):
+        return f"<text: {self.text}: timestamp: {self.timestamp} user_id: {self.user_id}>"
+
 class Like(db.Model):
     """An individual like on a ("warble")."""
 
@@ -196,6 +205,9 @@ class Like(db.Model):
         db.ForeignKey('messages.id', ondelete='CASCADE'),
         nullable=False,
     )
+
+    def __repr__(self):
+        return f"<id: {self.id}: user_id: {self.user_id} message_id: {self.message_id}>"
 
 def connect_db(app):
     """Connect this database to provided Flask app.

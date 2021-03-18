@@ -28,6 +28,11 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ECHO'] = False
 app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = True
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', "it's a secret")
+
+#TESTING CONFIGURATION
+app.config['TESTING'] = True
+app.config['WTF_CSRF_ENABLED'] = False
+
 toolbar = DebugToolbarExtension(app)
 
 connect_db(app)
