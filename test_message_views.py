@@ -9,13 +9,17 @@ import os
 from unittest import TestCase
 
 from models import db, connect_db, Message, User
+# from env import USER_POSTGRES, PASSWORD_POSTGRES
 
 # BEFORE we import our app, let's set an environmental variable
 # to use a different database for tests (we need to do this
 # before we import our app, since that will have already
 # connected to the database
 
-os.environ['DATABASE_URL'] = "postgresql:///warbler-test"
+# os.environ['DATABASE_URL'] = "postgresql:///warbler-test"
+
+# windows config
+# os.environ['DATABASE_URL'] = f"postgresql://{USER_POSTGRES}:{PASSWORD_POSTGRES}@127.0.0.1/warbler_test"
 
 # Now we can import app
 
@@ -70,3 +74,61 @@ class MessageViewTestCase(TestCase):
 
             msg = Message.query.one()
             self.assertEqual(msg.text, "Hello")
+
+    def test_show_message(self):
+        """Can we show a message?"""
+
+        # Since we need to change the session to mimic logging in,
+        # we need to use the changing-session trick:
+
+        message = Message(
+            id=999,
+            text="hello",
+            user_id=self.testuser.id
+        )
+
+        db.session.add(message)
+        db.session.commit()
+
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.testuser.id
+
+            # Now, that session setting is saved, so we can have
+            # the rest of ours test
+
+            # c.post("/messages/new", data={"id": 9999, "text": "Hello"})
+
+            resp = c.get("/messages/999")
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn(self.testuser.username, str(resp.data))
+
+    def test_delete_message(self):
+        """Can we delete a message?"""
+
+        # Since we need to change the session to mimic logging in,
+        # we need to use the changing-session trick:
+
+        message = Message(
+            id=999,
+            text="hello",
+            user_id=self.testuser.id
+        )
+
+        db.session.add(message)
+        db.session.commit()
+
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.testuser.id
+
+            # Now, that session setting is saved, so we can have
+            # the rest of ours test
+
+            resp = c.post("/messages/999/delete") 
+
+            self.assertEqual(resp.status_code, 302)
+            self.assertEqual(resp.location, f"http://localhost/users/{self.testuser.id}")
+
+            # self.assertIn(self.testuser.username, str(resp.data))

@@ -12,7 +12,7 @@ from flask_bcrypt import Bcrypt
 from sqlalchemy import exc
 
 from models import db, User, Message, Follows
-# from env import USER_POSTGRES, PASSWORD_POSTGRES
+from env import USER_POSTGRES, PASSWORD_POSTGRES
 
 # BEFORE we import our app, let's set an environmental variable
 # to use a different database for tests (we need to do this
@@ -20,10 +20,10 @@ from models import db, User, Message, Follows
 # connected to the database
 
 # mac config
-os.environ['DATABASE_URL'] = "postgresql:///warbler-test"
+# os.environ['DATABASE_URL'] = "postgresql:///warbler-test"
 
 # windows config
-# os.environ['DATABASE_URL'] = f"postgresql://{USER_POSTGRES}:{PASSWORD_POSTGRES}@127.0.0.1/warbler_test"
+os.environ['DATABASE_URL'] = f"postgresql://{USER_POSTGRES}:{PASSWORD_POSTGRES}@127.0.0.1/warbler_test"
 
 # Now we can import app
 

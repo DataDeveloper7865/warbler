@@ -10,8 +10,6 @@ from models import db, connect_db, User, Message, Like
 
 # from env import USER_POSTGRES, PASSWORD_POSTGRES
 
-# from env import USER_POSTGRES, PASSWORD_POSTGRES
-
 CURR_USER_KEY = "curr_user"
 
 app = Flask(__name__)
