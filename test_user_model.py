@@ -9,7 +9,7 @@ from app import app
 import os
 from unittest import TestCase
 from flask_bcrypt import Bcrypt
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy import exc
 
 from models import db, User, Message, Follows
 # from env import USER_POSTGRES, PASSWORD_POSTGRES
@@ -57,7 +57,8 @@ class UserModelTestCase(TestCase):
         self.u2 = User.signup(
             email="test123@test.com",
             username="testuser2",
-            password="HASHED_PASSWORD"
+            password="HASHED_PASSWORD",
+            image_url=None
         )
 
         self.u1.followers.append(self.u2)
@@ -99,16 +100,24 @@ class UserModelTestCase(TestCase):
             self.u1.password,
             self.u1.image_url), User)
 
-    # def test_signup_fails(self):
-    #     invalid_user = User.signup("User3", 1, "pass", None)
+    def test_signup_fails(self):
+        invalid_user = User.signup("User3", None, "pass123", None)
 
-    #     db.session.add(invalid_user)
-
-    # self.assertRaises(IntegrityError, db.session.commit)
-    # with self.assertRaises(exc.IntegrityError)
+        with self.assertRaises(exc.IntegrityError):
+            db.session.commit()
 
     def test_authenticate_successful(self):
         # 8. Does User.authenticate successfully return a user when given a valid username and password?
 
         u = User.authenticate(self.u1.username, "HASHED_PASSWORD")
         self.assertIsInstance(u, User)
+
+    def test_authenticate_username(self):
+        # 9. Does User.authenticate fail to return a user when the username is invalid?
+        u = User.authenticate('garygarygary', self.u1.password)
+        self.assertNotIsInstance(u, User)
+
+    def test_authenticate_password(self):
+        # 10. Does User.authenticate fail to return a user when the password is invalid?
+        u = User.authenticate(self.u1.username, "WRONG_PASSWORD")
+        self.assertNotIsInstance(u, User)
