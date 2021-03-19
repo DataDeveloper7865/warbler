@@ -1,9 +1,10 @@
 from flask_sqlalchemy import SQLAlchemy
 import os
 
-from flask import Flask, render_template, request, flash, redirect, session, g
+from flask import Flask, render_template, request, flash, redirect, session, g, url_for
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
+from functools import wraps
 
 from forms import UserAddForm, LoginForm, MessageForm, UpdateUserForm
 from models import db, connect_db, User, Message, Like
@@ -27,8 +28,8 @@ app.config['SQLALCHEMY_ECHO'] = False
 app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = True
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', "it's a secret")
 
-#TESTING CONFIGURATION
-app.config['TESTING'] = True
+# TESTING CONFIGURATION
+app.config['TESTING'] = False
 app.config['WTF_CSRF_ENABLED'] = False
 
 toolbar = DebugToolbarExtension(app)
@@ -287,7 +288,7 @@ def messages_add():
 def messages_show(message_id):
     """Show a message."""
 
-    msg = Message.query.get(message_id)
+    msg = Message.query.get_or_404(message_id)
     return render_template('messages/show.html', message=msg)
 
 
@@ -344,7 +345,7 @@ def like_dislike_message(mid):
     # Homepage and error pages
 
 
-@ app.route('/')
+@app.route('/')
 def homepage():
     """Show homepage:
     - anon users: no messages
@@ -367,12 +368,22 @@ def homepage():
         return render_template('home-anon.html')
 
 
+@app.errorhandler(404)
+def error_handler404(e):
+    return render_template('404.html')
+
+
+@app.errorhandler(405)
+def error_handler405(e):
+    return render_template('405.html')
+
 ##############################################################################
 # Turn off all caching in Flask
 #   (useful for dev; in production, this kind of stuff is typically
 #   handled elsewhere)
 #
 # https://stackoverflow.com/questions/34066804/disabling-caching-in-flask
+
 
 @ app.after_request
 def add_header(response):

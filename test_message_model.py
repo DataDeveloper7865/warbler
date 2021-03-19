@@ -66,8 +66,8 @@ class UserModelTestCase(TestCase):
         self.u2.id = 10000
 
         self.m1 = Message(
-            text = "blah blah blah",
-            user_id = self.u1.id
+            text="blah blah blah",
+            user_id=self.u1.id
         )
 
         db.session.add(self.m1, self.u1)
@@ -89,12 +89,12 @@ class UserModelTestCase(TestCase):
 
     def test_message_likes_relationship(self):
 
-        self.m2 = Message(
-            text = "blah2 blah2 blah2",
-            user_id = self.u1.id
+        m2 = Message(
+            text="blah2 blah2 blah2",
+            user_id=self.u1.id
         )
 
-        self.u2.liked_messages.append(self.m2)
+        self.u2.liked_messages.append(m2)
 
-        self.assertIn(self.m2, self.u2.liked_messages)
+        self.assertIn(m2, self.u2.liked_messages)
         self.assertNotIn(self.m1, self.u2.liked_messages)

@@ -5,6 +5,7 @@
 #    FLASK_ENV=production python -m unittest test_message_views.py
 
 
+from app import app, CURR_USER_KEY
 import os
 from unittest import TestCase
 
@@ -16,14 +17,13 @@ from models import db, connect_db, Message, User
 # before we import our app, since that will have already
 # connected to the database
 
-# os.environ['DATABASE_URL'] = "postgresql:///warbler-test"
+os.environ['DATABASE_URL'] = "postgresql:///warbler-test"
 
 # windows config
 # os.environ['DATABASE_URL'] = f"postgresql://{USER_POSTGRES}:{PASSWORD_POSTGRES}@127.0.0.1/warbler_test"
 
 # Now we can import app
 
-from app import app, CURR_USER_KEY
 
 # Create our tables (we do this here, so we only create the tables
 # once for all tests --- in each test, we'll delete the data
@@ -126,9 +126,8 @@ class MessageViewTestCase(TestCase):
             # Now, that session setting is saved, so we can have
             # the rest of ours test
 
-            resp = c.post("/messages/999/delete") 
+            resp = c.post("/messages/999/delete")
 
             self.assertEqual(resp.status_code, 302)
-            self.assertEqual(resp.location, f"http://localhost/users/{self.testuser.id}")
-
-            # self.assertIn(self.testuser.username, str(resp.data))
+            self.assertEqual(
+                resp.location, f"http://localhost/users/{self.testuser.id}")

@@ -101,7 +101,8 @@ class UserModelTestCase(TestCase):
             self.u1.image_url), User)
 
     def test_signup_fails(self):
-        invalid_user = User.signup("User3", None, "pass123", None)
+        """Invallid email """
+        User.signup("User3", None, "pass123", None)
 
         with self.assertRaises(exc.IntegrityError):
             db.session.commit()
